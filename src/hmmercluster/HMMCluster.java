@@ -1,6 +1,7 @@
 
 package hmmercluster;
 
+// pal libraries set classpath
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -19,17 +20,23 @@ July 2020
 
 Clusters regions on CMV genomes using AIC and hmm data.
 
+OPTIONS: java -jar java.jar <file align.fasta> <trim>  // todo <start [1234]> <end [1234]>
 */
 
 
 
+
+
 /* Simple Process Breakdown
-class construct
-HMMCluster
-    readFiles()
-        takes alignment file location
-        reads the fasta into a character matrix
-        returns "sequences" a matrix where atcg- -> 12345
+initialise variables
+HMMCluster main()
+    constructor()
+        readFiles()
+            takes alignment file location
+            reads the fasta icnto a character matrix
+            returns "sequences" a matrix where atcg- -> 12345
+    run()
+
 run
 
 
@@ -45,7 +52,7 @@ loops over end 0 -> end - 5 given start  = 0. Gets LL of clusters? for this alig
 
 //todo make the searching mechanism faster rather than by +5. do by 50 for 10* speed gain. then more granular?
 
-public class HMMCluster{
+public class HMMCluster{                                            // create class. initialises all the variables
 
     Alignment align = null;                                         // Alignment
     String[] identifiers = null;                                    // Identifiers
@@ -58,61 +65,66 @@ public class HMMCluster{
     boolean trim = true;                                            // Trim ends
 
     public static void main(String[] args) {
-        HMMCluster hmm = new HMMCluster(args);                      // create a new object of class HMMCluster, then run that object
-        hmm.run();
+        HMMCluster hmm = new HMMCluster(args);                      // Call the constructor
+        hmm.run(args);                                                  // Call the central method
     }
-    
-    HMMCluster(String[] args) {
+
+
+
+    HMMCluster(String[] args) {                                     // this is the HMMCluster constructor method.
         readFiles(args);                                            // Read in alignment
     }
 
-    void run() {
+    void run(String[] args) {
         double best = 10.0;
         int iStart = 0;
         int iEnd = nSites;
         int iStartBest = 0;
         int iEndBest = nSites;
-        int iGap = 5;
+        int iGap = 25;
         System.out.print("Coarse gap:" + "\t" + iGap + "t");
-        if (trim) { // ===TRUE
-            int iStartBestCoarse = iStartBest;
-            int iEndBestCoarse = iEndBest;
-            double bestCoarse = 10.0;
-            for (int iStartTry = 0; iStartTry < iEnd-iGap; iStartTry+=iGap) {     // from 5 to end - 5 : end
-                double newValue = findBest(iStartTry, iEnd, false);
-                System.out.println(iStartTry + "\t" + iEnd + "\t" + newValue);
-                if (newValue < bestCoarse) {
-                    bestCoarse = newValue;
-                    iStartBestCoarse = iStartTry;
+        //if (trim) {
+        for (String arg: args) {
+            if (arg.equals("trim")) {
+                int iStartBestCoarse = iStartBest;
+                int iEndBestCoarse = iEndBest;
+                double bestCoarse = 10.0;
+                for (int iStartTry = 0; iStartTry < iEnd - iGap; iStartTry += iGap) {     // try all start 0:end-igap
+                    double newValue = findBest(iStartTry, iEnd, false);
+                    System.out.println(iStartTry + "\t" + iEnd + "\t" + newValue);
+                    if (newValue < bestCoarse) {
+                        bestCoarse = newValue;
+                        iStartBestCoarse = iStartTry;
+                    }
                 }
-            }
-            for (int iEndTry = iStartBest+iGap; iEndTry < iEnd; iEndTry+=iGap) {  // start : from 5 to end
-                double newValue = findBest(iStartBest, iEndTry, false);
-                System.out.println(iStartBest + "\t" + iEndTry + "\t" + newValue);
-                if (newValue < bestCoarse) {
-                    bestCoarse = newValue;
-                    iEndBestCoarse = iEndTry;
+                for (int iEndTry = iStartBest + iGap; iEndTry < iEnd; iEndTry += iGap) {  // try all end start-igap:end
+                    double newValue = findBest(iStartBest, iEndTry, false);
+                    System.out.println(iStartBest + "\t" + iEndTry + "\t" + newValue);
+                    if (newValue < bestCoarse) {
+                        bestCoarse = newValue;
+                        iEndBestCoarse = iEndTry;
+                    }
                 }
-            }
-            for (int iStartTry = Math.max(0, iStartBestCoarse-20); iStartTry < Math.min(iEndBestCoarse-iGap, iStartBestCoarse+20); iStartTry+=1) {
-                double newValue = findBest(iStartTry, iEnd, false);
-                System.out.println(iStartTry + "\t" + iEnd + "\t" + newValue);
-                if (newValue < best) {
-                    best = newValue;
-                    iStartBest = iStartTry;
+                for (int iStartTry = Math.max(0, iStartBestCoarse - 20); iStartTry < Math.min(iEndBestCoarse - iGap, iStartBestCoarse + 20); iStartTry += 1) { // todo fic igap here. try around start with end = end
+                    double newValue = findBest(iStartTry, iEnd, false);
+                    System.out.println(iStartTry + "\t" + iEnd + "\t" + newValue);
+                    if (newValue < best) {
+                        best = newValue;
+                        iStartBest = iStartTry;
+                    }
                 }
-            }
-            for (int iEndTry = Math.max(iStartBest+iGap, iEndBestCoarse-20); iEndTry < Math.min(iEnd, iEndBestCoarse+20); iEndTry+=1) {
-                double newValue = findBest(iStartBest, iEndTry, false);
-                System.out.println(iStartBest + "\t" + iEndTry + "\t" + newValue);
-                if (newValue < best) {
-                    best = newValue;
-                    iEndBest = iEndTry;
+                for (int iEndTry = Math.max(iStartBest + iGap, iEndBestCoarse - 20); iEndTry < Math.min(iEnd, iEndBestCoarse + 20); iEndTry += 1) { //todo try aroundbest end with start = start form above.
+                    double newValue = findBest(iStartBest, iEndTry, false);
+                    System.out.println(iStartBest + "\t" + iEndTry + "\t" + newValue);
+                    if (newValue < best) {
+                        best = newValue;
+                        iEndBest = iEndTry;
+                    }
                 }
             }
         }
         
-        findBest(iStartBest, iEndBest, true);
+        findBest(iStartBest, iEndBest, true); //now have best trim values for start & end run with print = true.
     }
     
     /**
@@ -122,14 +134,14 @@ public class HMMCluster{
      * @param printOutput Print out stuff
      * @return  Best AIC value relative to single cluster
      */
-    double findBest(int iStart, int iEnd, boolean printOutput) {
+    double findBest(int iStart, int iEnd, boolean printOutput) {    // main calculation, run every time.
         
-        TreeSet<Integer> all = new TreeSet<>();                     // Single cluster <tree class from pal>
+        TreeSet<Integer> all = new TreeSet<>();                     // Single cluster tree = kay:value store, where keys are organised always.
         ArrayList<Cluster>[] current = new ArrayList[nSeqs+1];      // Repository for sets of clusters
         computedClusterMap.clear();                                 // Scrub memory
         
         current[0] = new ArrayList<>();                             // Initial set of clusters
-        for (int iSeq = 0; iSeq < nSeqs; iSeq++) {
+        for (int iSeq = 0; iSeq < nSeqs; iSeq++) {                  // for each seq
             TreeSet<Integer> example = new TreeSet<>();
             example.add(iSeq);
             String label = Arrays.toString(example.toArray());
@@ -139,7 +151,7 @@ public class HMMCluster{
             all.add(iSeq);                                          // Add individual sequences to all cluster
         }
         String label = Arrays.toString(all.toArray());
-        Cluster allCluster = new Cluster(all, label, iStart, iEnd);
+        Cluster allCluster = new Cluster(all, label, iStart, iEnd); // output is simpply an array list of lists. where each list of lists contains only 1 seq. 1seq - 1 cluster
         computedClusterMap.put(label, allCluster);
         
         // Find best set of clusters using greedy algorithm
@@ -325,7 +337,7 @@ public class HMMCluster{
         }      
         
         void computeLL(int iStart, int iEnd) { // look at writeup
-            for (int iSite = iStart; iSite < iEnd; iSite++) {
+            for (int iSite = iStart; iSite < iEnd; iSite++) {           // for each site
                 int[] baseCount = new int[4];                               // Count of each type of base
                 int totBaseCount = 0;                                       // Total count
                 int[] newStartDelCount = new int[2];                        // Match to match, match to delete
@@ -338,7 +350,7 @@ public class HMMCluster{
                  */
 
 
-                for (int iSeq : includedSequences) {
+                for (int iSeq : includedSequences) {                    // for each sequence in this position
                     if (sequences[iSeq][iSite] < 4) {                       // If standard base
                         baseCount[sequences[iSeq][iSite]]++;
                         totBaseCount++;
@@ -361,7 +373,7 @@ public class HMMCluster{
                 
                 int nBasePresent = 0;                                       // How many bases are present
 
-                // hi oscar
+                // hi oscar method start
                 for (int iBase = 0; iBase < 4; iBase++) {                
                     if (baseCount[iBase] > 0) {                             // If base is present
                         double freq = baseCount[iBase]*1.0/totBaseCount;    // Freq of base

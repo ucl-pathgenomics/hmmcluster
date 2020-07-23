@@ -43,7 +43,7 @@ pattern = "[^ACTG-]"
 
 ## functions
 # for MSA -> reference genome
-get_reltive_ref_pos = function(alignment, ref.file = run.ref){
+get_relative_ref_pos = function(alignment, ref.file = run.ref){
   # takes alignemnt and reference merlin file
   # returns start, end location relative to merlin
   
@@ -99,7 +99,7 @@ msa$seq <- read.dna(msa$file, format = "fasta", as.matrix = T)
 msa$len = length(msa$seq[1,])
 msa$genomes = length(labels(msa$seq))
 run$iter = seq(run$flank, msa$len - (run$width + run$flank+1), run$width)
-run$iter = run$iter[257:268] # debug
+run$iter = run$iter[257:267] # debug
 
 t$tbases = run$twidth * msa$genomes # total bases
 t$previous = FALSE
@@ -126,8 +126,8 @@ for(i in 1:length(run$iter - 1)){
     
     
     #--------------- reference relative position
-    t$ref_start = get_reltive_ref_pos(t$seq, run$ref)[1]
-    t$ref_end = get_reltive_ref_pos(t$seq, run$ref)[2]
+    t$ref_start = get_relative_ref_pos(t$seq, run$ref)[1]
+    t$ref_end = get_relative_ref_pos(t$seq, run$ref)[2]
     
     
     
@@ -164,7 +164,7 @@ for(i in 1:length(run$iter - 1)){
     
     
     
-    
+     
     
     #------------------- hmmclustering - do we trim?
     # if prev 1 now more, trim.
@@ -175,7 +175,11 @@ for(i in 1:length(run$iter - 1)){
     
     if(t$current == T & t$previous != t$current){ # hom -> gt: rerun this region with trim. store start pos
       print(paste(t$start, "running start hmm"))
-      t$command = paste("java -jar", run$jar, t$outfile_fasta, "trim") # now trim
+      # need to look back at last chuck as well - cant be sure it started this chunk
+      gtreg$seq = msa$seq[,(t$start - run$width):t$end] # alignment chunk
+      gtreg$outfile_fasta = paste("out/temp.fasta", sep = "")
+      write.FASTA(gtreg$seq, file = gtreg$outfile_fasta)
+      t$command = paste("java -jar", run$jar, gtreg$outfile_fasta, "trim") # now trim
       t$hmmcluster = system(t$command,intern = T)
       cat(t$hmmcluster,file = paste("out-gt/", gtreg$loops, "start.out", sep = ""),sep = "\n",append = T)
       # best way to deal with this will be to split the data by chunks.
@@ -183,11 +187,15 @@ for(i in 1:length(run$iter - 1)){
       # key output line
       gtreg$dat.out = read.table(text = t$hmmcluster[t$empty_lines[1] + 1], sep = "\t")
       colnames(gtreg$dat.out) = c("cluters", "start_pos", "end_pos", "LL", "paramaters", "AIC", "AIC_relative")
-      gtreg$start = t$start + gtreg$dat.out$start_pos[1] # store start pos
+      gtreg$start = t$start - run$width + gtreg$dat.out$start_pos[1] # store start pos
       
     }else if(t$current == F & t$previous != t$current){ # if gt -> hom: rerun this region with trim store end pos
       print(paste(t$start, "running end hmm"))
-      t$command = paste("java -jar", run$jar, t$outfile_fasta, "trim") # now trim
+      # need to look back at last chuck as well - cant be sure it started this chunk
+      gtreg$seq = msa$seq[,(t$start - run$width):t$end] # alignment chunk
+      gtreg$outfile_fasta = paste("out/temp.fasta", sep = "")
+      write.FASTA(gtreg$seq, file = gtreg$outfile_fasta)
+      t$command = paste("java -jar", run$jar, gtreg$outfile_fasta, "trim") # now trim
       t$hmmcluster = system(t$command,intern = T)
       cat(t$hmmcluster,file = paste("out-gt/", gtreg$loops, "end.out", sep = ""),sep = "\n",append = T)
       # best way to deal with this will be to split the data by chunks.
@@ -201,8 +209,8 @@ for(i in 1:length(run$iter - 1)){
       ##------ have now defined a genotypic region, and need to write it to file.
       # get ref relative positions
       gtreg$seq = msa$seq[,(gtreg$start):(gtreg$end - 1)] # alignment chunk
-      gtreg$ref_start = get_reltive_ref_pos(gtreg$seq, run$ref)[1]
-      gtreg$ref_end = get_reltive_ref_pos(gtreg$seq, run$ref)[2]
+      gtreg$ref_start = get_relative_ref_pos(gtreg$seq, run$ref)[1]
+      gtreg$ref_end = get_relative_ref_pos(gtreg$seq, run$ref)[2]
       
       
       gtreg$dat = data.frame(which = gtreg$loops,

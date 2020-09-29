@@ -1,6 +1,6 @@
 
 # hmmcluster
-A method to identify homologous sequence clusters from a multiple sequence alignment of nucleotide sequences in FASTA format.
+A method to identify homologous nucleotide sequence clusters from an alignment in FASTA format.
 Standalone java programs and implementation to find such structural blocks in a MSA.
 
 ## method
@@ -15,6 +15,10 @@ Treats each sequence as it's own HMM, then finds the optimal way to cluster sequ
 	 - AIC param1 is the least penalising model.
  - get_regions.R - Runs the model coarsely scanning along an MSA to find regions of interest.
  - get_regions_refined - Refines the determined regions, to provide the best start & stop positions.
+ 
+## Requires
+ - Multiple sequence alignment
+ - Reference genome in fasta format. R scripts will return a table with alignment and reference co-ordinates.
 
 ## Examples
 #### Running the models from a terminal

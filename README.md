@@ -1,5 +1,10 @@
-
 # hmmcluster
+
+  <!-- badges: start -->
+  [![Travis build status](https://travis-ci.com/ucl-pathgenomics/hmmcluster.svg?branch=master)](https://travis-ci.com/ucl-pathgenomics/hmmcluster)
+  <!-- badges: end -->
+ 
+## overview
 A method to identify homologous nucleotide sequence clusters from an alignment in FASTA format.
 Standalone java programs and implementation to find such structural blocks in a MSA.
 

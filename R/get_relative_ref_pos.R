@@ -1,5 +1,11 @@
-
-
+#' For a given sequence alignment, fasta format, file name. Return the start and stop positions relative to my reference sequence
+#'
+#' @param alignment Multiple Sequence Alignment fasta file location
+#' @param ref.file Fasta file containing Reference genome
+#' @param ref.pattern 
+#' @return vector representing start and stop positions relative to reference
+#' @export
+#'
 get_relative_ref_pos = function(alignment, ref.file = "ref/NC_006273.2.fasta", ref.pattern = "Merlin"){
   # takes alignment and reference merlin file
   # returns start, end location relative to merlin

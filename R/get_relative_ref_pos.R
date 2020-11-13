@@ -1,4 +1,4 @@
-#' For a given sequence alignment, fasta format, file name. Return the start and stop positions relative to my reference sequence
+#' Return the start and stop positions relative to my reference sequence
 #'
 #' @param alignment Multiple Sequence Alignment fasta file location
 #' @param ref.file Fasta file containing Reference genome
@@ -6,13 +6,13 @@
 #' @return vector representing start and stop positions relative to reference
 #' @export
 #'
-get_relative_ref_pos = function(alignment, ref.file = "ref/NC_006273.2.fasta", ref.pattern = "Merlin"){
+get_relative_ref_pos = function(alignment, ref.file = system.file("ref/NC_006273.2.fasta",package = "hmmcluster"), ref.pattern = "Merlin"){
   # takes alignment and reference merlin file
   # returns start, end location relative to merlin
   
   pattern = "[^ACTG-]"
   
-  ref.seq = read.dna(ref.file,format = "fasta", as.matrix = T)
+  ref.seq = ape::read.dna(ref.file,format = "fasta", as.matrix = T)
   ref.seq.string = paste(as.character(ref.seq),collapse = "")
   
   alignemnt.ref.num = grep(x = labels(alignment), pattern = ref.pattern)
@@ -45,8 +45,40 @@ get_relative_ref_pos = function(alignment, ref.file = "ref/NC_006273.2.fasta", r
   
   
   ## locate the location of these strings in the reference sequence and output.
-  t.start.merlinpos = str_locate(pattern = t.start20, string = ref.seq.string)[1] # grab pos of first base in start string
-  t.end.merlinpos = str_locate(pattern = t.end20, string = ref.seq.string)[2] # grab pos of last base in end string
+  t.start.merlinpos = stringr::str_locate(pattern = t.start20, string = ref.seq.string)[1] # grab pos of first base in start string
+  t.end.merlinpos = stringr::str_locate(pattern = t.end20, string = ref.seq.string)[2] # grab pos of last base in end string
   
   return(c(t.start.merlinpos, t.end.merlinpos))
 }
+
+
+
+#' Safely, escape if reference sequence has been corrupted. Return the start and stop positions relative to my reference sequence
+#'
+#' @param alignment Multiple Sequence Alignment fasta file location
+#' @param ref.file Fasta file containing Reference genome
+#' @param ref.pattern 
+#' @return vector representing start and stop positions relative to reference
+#' @export
+#'
+get_relative_ref_pos_safe <- function(alignment, ref.file = system.file("ref/NC_006273.2.fasta",package = "hmmcluster"), ref.pattern = "Merlin") {
+  time_limit <- 10
+  setTimeLimit(cpu = time_limit, elapsed = time_limit, transient = TRUE)
+  on.exit({
+    setTimeLimit(cpu = Inf, elapsed = Inf, transient = FALSE)
+  })
+  
+  tryCatch({
+    # do some stuff
+    out = get_relative_ref_pos(alignment, ref.file, ref.pattern)
+  }, error = function(e) {
+    if (grepl("reached elapsed time limit|reached CPU time limit", e$message)) {
+      # we reached timeout, apply some alternative method or do something else
+    } else {
+      # error not related to timeout
+      stop(e)
+    }
+  })
+  return(out)
+}
+

@@ -50,6 +50,11 @@ get_regions_parallel = function(alignment = system.file("extdata/cmv_msa.fasta",
   if(!dir.exists("out/1-raw")){dir.create("out/1-raw")}
   if(!dir.exists("out/2-gt")){dir.create("out/2-gt")}
   if(!dir.exists("out/3-clean")){dir.create("out/3-clean")}
+  # clean dirs 
+  suppressMessages(do.call(file.remove, list(list.files("out/1-raw", full.names = TRUE))))
+  suppressMessages(do.call(file.remove, list(list.files("out/2-gt", full.names = TRUE))))
+  suppressMessages(do.call(file.remove, list(list.files("out/3-clean", full.names = TRUE))))
+  
 
   
   #-----------------
@@ -64,7 +69,7 @@ get_regions_parallel = function(alignment = system.file("extdata/cmv_msa.fasta",
   t$previous = FALSE; gtreg$prev_end = 1
   t$loops = 0 ; gtreg$loops = 1
   
-  cat(paste(paste(c("clusters", "start_pos", "end_pos", "LL", "paramaters", "AIC", "AIC_relative"),collapse = "\t"), "\n", sep = ""))
+  #cat(paste(paste(c("clusters", "start_pos", "end_pos", "LL", "paramaters", "AIC", "AIC_relative"),collapse = "\t"), "\n", sep = ""))
   
   # parallellisation 1
   # process each fasta into .out file for reading in later
@@ -75,7 +80,7 @@ get_regions_parallel = function(alignment = system.file("extdata/cmv_msa.fasta",
     t$seq = msa$seq[,t$start:t$end] # alignment chunk
     #---------- ignore if it is mostly garbage!
     t$num_indel = stringr::str_count(paste(as.character(t$seq),collapse = ""), "-")
-    t$frac_indel = t$num_indel/ t$tbases
+    t$frac_indel = t$num_indel / t$tbases
     if(t$frac_indel > 0.4){next}
     #---------- write fasta
     t$outfile_fasta = paste("out/1-raw/",run$iter[i],".fasta", sep = "")

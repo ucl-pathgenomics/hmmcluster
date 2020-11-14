@@ -1,6 +1,6 @@
 #' Return the start and stop positions relative to my reference sequence
 #'
-#' @param alignment Multiple Sequence Alignment fasta file location
+#' @param alignment Multiple Sequence Alignment as dnabin
 #' @param ref.file Fasta file containing Reference genome
 #' @param ref.pattern 
 #' @return vector representing start and stop positions relative to reference
@@ -62,7 +62,7 @@ get_relative_ref_pos = function(alignment, ref.file = system.file("ref/NC_006273
 #' @export
 #'
 get_relative_ref_pos_safe <- function(alignment, ref.file = system.file("ref/NC_006273.2.fasta",package = "hmmcluster"), ref.pattern = "Merlin") {
-  time_limit <- 10
+  time_limit <- 2 # 2 seconds
   setTimeLimit(cpu = time_limit, elapsed = time_limit, transient = TRUE)
   on.exit({
     setTimeLimit(cpu = Inf, elapsed = Inf, transient = FALSE)
@@ -74,11 +74,12 @@ get_relative_ref_pos_safe <- function(alignment, ref.file = system.file("ref/NC_
   }, error = function(e) {
     if (grepl("reached elapsed time limit|reached CPU time limit", e$message)) {
       # we reached timeout, apply some alternative method or do something else
+      out = NA
     } else {
       # error not related to timeout
+      out = NA
       stop(e)
     }
   })
-  return(out)
 }
 

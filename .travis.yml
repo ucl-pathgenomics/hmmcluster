@@ -2,3 +2,18 @@
 
 language: R
 cache: packages
+sudo: false
+dist: bionic
+cran: http://cran.rstudio.com
+  
+branches:
+only:
+- /.*/
+
+r:
+  - release
+  - devel
+  
+jdk:
+  - oraclejdk13
+  - openjdk13

@@ -8,7 +8,7 @@ ref.pattern = "Merlin"
 
 
 # #------------------------ test get regions
-# # running on a very small subset of the msa to test method
+# running on a very small subset of the msa to test method
 # test_msa = alignment[,6000:7200]
 # ape::write.FASTA(test_msa, "del.fasta")
 # get_regions_parallel(alignment = "del.fasta",ref.file = ref.file,ref.pattern = ref.pattern,run_width = 200,run_java = "/opt/jdk-13/bin/java",run_model = "AIC")

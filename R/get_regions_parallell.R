@@ -2,14 +2,14 @@
 #'
 #' @param alignment Multiple Sequence Alignment fasta file location
 #' @param ref.file Fasta file containing Reference genome
-#' @param ref.pattern 
+#' @param ref.pattern Unique string to identift reference sequence in alignment labels
 #' @param run_width how many base pairs should each genome scan be
 #' @param run_java command to run java executable, equired openjdk 13 or equivilent
 #' @param run_model model selection either 'AIC' or 'BIC. Defaut is AIC
 #' @return vector representing start and stop positions relative to reference
 #' @export
 #'
-get_regions_parallel = function(alignment = system.file("extdata/cmv_msa.fasta",package = "hmmcluster"), ref.file = "ref/NC_006273.2.fasta", ref.pattern = "Merlin", run_width = 200, run_java = "java", run_model = "AIC"){
+get_regions_parallel = function(alignment = system.file("extdata/cmv_msa.fasta",package = "hmmcluster"), ref.file = system.file("ref/NC_006273.2.fasta",package = "hmmcluster"), ref.pattern = "Merlin", run_width = 200, run_java = "/opt/jdk-13/bin/java", run_model = "AIC"){
   #-----------------
   # setup
   #-----------------
@@ -88,7 +88,7 @@ get_regions_parallel = function(alignment = system.file("extdata/cmv_msa.fasta",
   }
   
   print(paste("step 2 -" , date() ,"- running hmmcluster on each genome chunk"))
-  system(paste0('find out/1-raw/ -name "*.fasta" | parallel "', run$java,' -jar ' , run$jar , ' {} > {}.out"'))
+  system(paste0('find out/1-raw/ -name "*.fasta" | parallel " ', run$java,' -jar ' , run$jar , ' {} > {}.out" '))
   
   
   # parallellisation 2
@@ -141,7 +141,8 @@ get_regions_parallel = function(alignment = system.file("extdata/cmv_msa.fasta",
   gtreg$prev_end = 1
   gtreg$number = 1
   files = gtools::mixedsort(list.files("out/2-gt", pattern = "*.out"))
-  cat(paste("region", "start_orig", "start", "end", "clusters", "note", "ref_start", "ref_end", sep = ","),sep = "\n",file = "out/3-clean/gt-regions.csv",append = F)
+  cat(paste("region", "start", "end", "clusters", "ref_start", "ref_end", "LLikelihood", "Parameters", "AIC", "AIC_relative", sep = ","))
+  cat(paste("region", "start", "end", "clusters", "ref_start", "ref_end", "LLikelihood", "Parameters", "AIC", "AIC_relative", sep = ","),sep = "\n",file = "out/3-clean/gt-regions.csv",append = F)
   for(i in 1:length(files)){
     infile = files[i]
     infile = paste0("out/2-gt/", infile)
@@ -150,17 +151,16 @@ get_regions_parallel = function(alignment = system.file("extdata/cmv_msa.fasta",
     dat.out = utils::read.table(text = t$text[t$empty_lines[1] + 1], sep = "\t") # key output line
     gtreg$clusters = dat.out[1, 1] # value = number of clusters
     gtreg$start_orig = as.numeric(stringr::str_extract(infile, "[0-9]{3,9}"))
+    gtreg$start = as.numeric(gtreg$start_orig + dat.out[2])
+    gtreg$end = as.numeric(gtreg$start_orig + dat.out[3])
+    gtreg$LogLikelihood = as.numeric(dat.out[4])
+    gtreg$params = as.numeric(dat.out[5])
+    gtreg$AIC = as.numeric(dat.out[6])
+    gtreg$AIC_relative = as.numeric(dat.out[7])
     if(gtreg$clusters == 1){
       # ignore it
     }else{
       # is more than one cluster
-      gtreg$start = gtreg$start_orig + dat.out[1,2]
-      gtreg$end = gtreg$start_orig + dat.out[1,3]
-      if(gtreg$start <= gtreg$prev_end){
-        gtreg$note = "YES"}
-      else{
-        gtreg$note = "NO"
-      }
       ### write fasta
       t$seq = msa$seq[, gtreg$start:gtreg$end] # alignment chunk
       t$outfile_fasta = paste("out/3-clean/", gtreg$number,"-", gtreg$start, "-", gtreg$end , ".fasta", sep = "")
@@ -172,14 +172,14 @@ get_regions_parallel = function(alignment = system.file("extdata/cmv_msa.fasta",
       gtreg$ref_end = gtreg$ref_ss[2]
       
       # write data
-      cat(paste(gtreg$number, gtreg$start_orig, gtreg$start, gtreg$end, gtreg$clusters, gtreg$note, gtreg$ref_start, gtreg$ref_end, sep = ","),sep = "\n")
-      cat(paste(gtreg$number, gtreg$start_orig, gtreg$start, gtreg$end, gtreg$clusters, gtreg$note, gtreg$ref_start, gtreg$ref_end, sep = ","),sep = "\n",file = "out/3-clean/gt-regions.csv",append = T)
+      cat(paste(gtreg$number, gtreg$start, gtreg$end, gtreg$clusters, gtreg$ref_start, gtreg$ref_end, gtreg$LogLikelihood, gtreg$params, gtreg$AIC, gtreg$AIC_relative, sep = ","),sep = "\n")
+      cat(paste(gtreg$number, gtreg$start, gtreg$end, gtreg$clusters, gtreg$ref_start, gtreg$ref_end, gtreg$LogLikelihood, gtreg$params, gtreg$AIC, gtreg$AIC_relative, sep = ","),sep = "\n",file = "out/3-clean/gt-regions.csv",append = T)
       gtreg$number = gtreg$number + 1
       gtreg$prev_end = gtreg$end
     }
   }
   #return a dataframe
-  out = read.csv("out/3-clean/gt-regions.csv")
+  out = utils::read.csv("out/3-clean/gt-regions.csv")
   
   print(paste("step X -" , date() ,"- hmmcluster has finished"))
   

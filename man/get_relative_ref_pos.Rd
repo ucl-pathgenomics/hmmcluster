@@ -11,11 +11,11 @@ get_relative_ref_pos(
 )
 }
 \arguments{
-\item{alignment}{Multiple Sequence Alignment fasta file location}
+\item{alignment}{Multiple Sequence Alignment as dnabin}
 
 \item{ref.file}{Fasta file containing Reference genome}
 
-\item{ref.pattern}{}
+\item{ref.pattern}{Unique string to identift reference sequence in alignment labels}
 }
 \value{
 vector representing start and stop positions relative to reference

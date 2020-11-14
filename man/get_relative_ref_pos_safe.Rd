@@ -15,7 +15,7 @@ get_relative_ref_pos_safe(
 
 \item{ref.file}{Fasta file containing Reference genome}
 
-\item{ref.pattern}{}
+\item{ref.pattern}{Unique string to identift reference sequence in alignment labels}
 }
 \value{
 vector representing start and stop positions relative to reference

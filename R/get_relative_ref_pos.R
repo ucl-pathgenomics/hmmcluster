@@ -2,7 +2,7 @@
 #'
 #' @param alignment Multiple Sequence Alignment as dnabin
 #' @param ref.file Fasta file containing Reference genome
-#' @param ref.pattern 
+#' @param ref.pattern Unique string to identift reference sequence in alignment labels
 #' @return vector representing start and stop positions relative to reference
 #' @export
 #'
@@ -57,7 +57,7 @@ get_relative_ref_pos = function(alignment, ref.file = system.file("ref/NC_006273
 #'
 #' @param alignment Multiple Sequence Alignment fasta file location
 #' @param ref.file Fasta file containing Reference genome
-#' @param ref.pattern 
+#' @param ref.pattern Unique string to identift reference sequence in alignment labels
 #' @return vector representing start and stop positions relative to reference
 #' @export
 #'

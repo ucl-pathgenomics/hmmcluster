@@ -2,14 +2,14 @@
 #'
 #' @param alignment Multiple Sequence Alignment fasta file location
 #' @param ref.file Fasta file containing Reference genome
-#' @param ref.pattern 
+#' @param ref.pattern Unique string to identift reference sequence in alignment labels
 #' @param run_width how many base pairs should each genome scan be
 #' @param run_java command to run java executable, equired openjdk 13 or equivilent
 #' @param run_model model selection either 'AIC' or 'BIC. Defaut is AIC
 #' @return vector representing start and stop positions relative to reference
 #' @export
 #'
-get_regions_coarse_parallel = function(alignment = "all_raw_best_msa_man3b.fasta", ref.file = "ref/NC_006273.2.fasta", ref.pattern = "Merlin", run_width = 200, run_java = "java", run_model = "AIC"){
+get_regions_coarse_parallel = function(alignment = system.file("extdata/cmv_msa.fasta",package = "hmmcluster"), ref.file = system.file("ref/NC_006273.2.fasta",package = "hmmcluster"), ref.pattern = "Merlin", run_width = 200, run_java = "/opt/jdk-13/bin/java", run_model = "AIC"){
   warning("this is unstable and unfinished!")
   stop()
   #-----------------
@@ -28,9 +28,9 @@ get_regions_coarse_parallel = function(alignment = "all_raw_best_msa_man3b.fasta
   run$twidth = run$width + 2*run$flank
   run$java = run_java # "/opt/jdk-13/bin/java"
   if(run_model == "AIC"){
-    run$jar = system.file("inst/AIC.jar")
+    run$jar = system.file("AIC.jar",package = "hmmcluster")
   }else if(run_model == "BIC"){
-    run$jar = system.file("inst/BIC.jar")
+    run$jar = system.file("BIC.jar",package = "hmmcluster")
   }else{
     warning("obs: Please check your model selection is 'AIC' or 'BIC'!")
     stop()
@@ -52,6 +52,11 @@ get_regions_coarse_parallel = function(alignment = "all_raw_best_msa_man3b.fasta
   if(!dir.exists("out/1-raw")){dir.create("out/1-raw")}
   if(!dir.exists("out/2-gt")){dir.create("out/2-gt")}
   if(!dir.exists("out/3-clean")){dir.create("out/3-clean")}
+  # clean dirs 
+  suppressMessages(do.call(file.remove, list(list.files("out/1-raw", full.names = TRUE))))
+  suppressMessages(do.call(file.remove, list(list.files("out/2-gt", full.names = TRUE))))
+  suppressMessages(do.call(file.remove, list(list.files("out/3-clean", full.names = TRUE))))
+  
   
   
   #-----------------
@@ -66,31 +71,32 @@ get_regions_coarse_parallel = function(alignment = "all_raw_best_msa_man3b.fasta
   t$previous = FALSE; gtreg$prev_end = 1
   t$loops = 0 ; gtreg$loops = 1
   
-  cat(paste(paste(c("clusters", "start_pos", "end_pos", "LL", "paramaters", "AIC", "AIC_relative"),collapse = "\t"), "\n", sep = ""))
+  #cat(paste(paste(c("clusters", "start_pos", "end_pos", "LL", "paramaters", "AIC", "AIC_relative"),collapse = "\t"), "\n", sep = ""))
   
   # parallellisation 1
   # process each fasta into .out file for reading in later
-  print(paste("step 1 coarse -" , date() ,"- generating a set of genome chunk fasta files"))
-  for(i in 1:length(run$iter - 1)){
-    
+  print(paste("step 1 -" , date() ,"- generating a set of genome chunk fasta files"))
+  for(i in 1:(length(run$iter) - 1)){
     t$start = (run$iter[i] - run$flank)
     t$end = (run$iter[i+1] + run$flank - 1)
     t$seq = msa$seq[,t$start:t$end] # alignment chunk
     #---------- ignore if it is mostly garbage!
     t$num_indel = stringr::str_count(paste(as.character(t$seq),collapse = ""), "-")
-    t$frac_indel = t$num_indel/ t$tbases
+    t$frac_indel = t$num_indel / t$tbases
     if(t$frac_indel > 0.4){next}
     #---------- write fasta
     t$outfile_fasta = paste("out/1-raw/",run$iter[i],".fasta", sep = "")
-    write.FASTA(t$seq, file = t$outfile_fasta)
+    ape::write.FASTA(t$seq, file = t$outfile_fasta)
   }
-  print(paste("step 2 coarse -" , date() ,"- running hmmcluster on each genome chunk"))
-  system(paste0('find out/1-raw/ -name "*.fasta" | parallel "', run$java,' -jar AIC.jar {} > {}.out"'))
+  
+  print(paste("step 2 -" , date() ,"- running hmmcluster on each genome chunk"))
+  system(paste0('find out/1-raw/ -name "*.fasta" | parallel " ', run$java,' -jar ' , run$jar , ' {} > {}.out" '))
   
   
   # parallellisation 2
   # identify regions to run trimmed
-  print(paste("step 3 coarse -" , date() ,"- identifying coarse regions of genomic structure & generating fasta files"))
+  print(paste("step 3 -" , date() ,"- identifying coarse regions of genomic structure & generating fasta files"))
+  print(paste("region", "start", "end", "ref_start", "ref_end"))
   t$previous = 1
   gtreg$prev_end = 1
   gtreg$number = 1
@@ -103,7 +109,6 @@ get_regions_coarse_parallel = function(alignment = "all_raw_best_msa_man3b.fasta
     # key output line
     dat.out = utils::read.table(text = t$text[t$empty_lines[1] + 1], sep = "\t")
     t$current = dat.out[1, 1] # value = number of clusters
-    
     if (t$previous == 1 && t$current == 1 ) {
       # do nothing
     }
@@ -120,56 +125,16 @@ get_regions_coarse_parallel = function(alignment = "all_raw_best_msa_man3b.fasta
       gtreg$end = gtreg$end + run$width / 2
       # create region fasta
       t$seq = msa$seq[, gtreg$start:gtreg$end] # alignment chunk
-      t$outfile_fasta = paste("out/2-gt/", gtreg$start, ".fasta", sep = "")
-      write.FASTA(t$seq, file = t$outfile_fasta)
-      gtreg$number = gtreg$number + 1
-      print(paste(gtreg$number, gtreg$start, gtreg$end))
-    }
-    t$previous = t$current
-  }
-  
-  
-  # get final regions
-  print(paste("step 4 coarse -" , date() ,"- generating table and alignemnts of coarse structural regions"))
-  gtreg$prev_end = 1
-  gtreg$number = 1
-  files = gtools::mixedsort(list.files("out/2-gt", pattern = "*.out"))
-  cat(paste("region", "start_orig", "start", "end", "clusters", "note", "ref_start", "ref_end", sep = ","),sep = "\n",file = "out/3-clean/gt-regions.csv",append = F)
-  for(i in 1:length(files)){
-    infile = files[i]
-    infile = paste0("out/2-gt/", infile)
-    t$text = readLines(infile)
-    t$empty_lines = grep(pattern = "^$", t$text) # which lines have empty lines
-    dat.out = utils::read.table(text = t$text[t$empty_lines[1] + 1], sep = "\t") # key output line
-    gtreg$clusters = dat.out[1, 1] # value = number of clusters
-    gtreg$start_orig = as.numeric(stringr::str_extract(infile, "[0-9]{3,9}"))
-    if(gtreg$clusters == 1){
-      # ignore it
-    }else{
-      # is more than one cluster
-      gtreg$start = gtreg$start_orig + dat.out[1,2]
-      gtreg$end = gtreg$start_orig + dat.out[1,3]
-      if(gtreg$start <= gtreg$prev_end){
-        gtreg$note = "YES"}
-      else{
-        gtreg$note = "NO"
-      }
-      ### write fasta
-      t$seq = msa$seq[, gtreg$start:gtreg$end] # alignment chunk
-      t$outfile_fasta = paste("out/3-clean/", gtreg$number,"-", gtreg$start, "-", gtreg$end , ".fasta", sep = "")
-      write.FASTA(t$seq, file = t$outfile_fasta)
       
       # get reference position
-      gtreg$ref_start = get_relative_ref_pos_safe(t$seq, run$ref)[1]
-      gtreg$ref_start = get_relative_ref_pos(t$seq, run$ref, run$ref.pattern)[1]
-      gtreg$ref_end = get_relative_ref_pos(t$seq, run$ref, run$ref.pattern)[2]
+      gtreg$ref_ss = get_relative_ref_pos_safe(t$seq, run$ref, run$ref.pattern)
+      gtreg$ref_start = gtreg$ref_ss[1]
+      gtreg$ref_end = gtreg$ref_ss[2]
       
-      # write data
-      cat(paste(gtreg$number, gtreg$start_orig, gtreg$start, gtreg$end, gtreg$clusters, gtreg$note, gtreg$ref_start, gtreg$ref_end, sep = ","),sep = "\n")
-      cat(paste(gtreg$number, gtreg$start_orig, gtreg$start, gtreg$end, gtreg$clusters, gtreg$note, gtreg$ref_start, gtreg$ref_end, sep = ","),sep = "\n",file = "out/3-clean/gt-regions.csv",append = T)
+      print(paste(gtreg$number, gtreg$start, gtreg$end, gtreg$ref_start, gtreg$ref_end, sep = ","))
       gtreg$number = gtreg$number + 1
-      gtreg$prev_end = gtreg$end
     }
+    t$previous = t$current
   }
   
   

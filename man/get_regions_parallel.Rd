@@ -6,10 +6,10 @@
 \usage{
 get_regions_parallel(
   alignment = system.file("extdata/cmv_msa.fasta", package = "hmmcluster"),
-  ref.file = "ref/NC_006273.2.fasta",
+  ref.file = system.file("ref/NC_006273.2.fasta", package = "hmmcluster"),
   ref.pattern = "Merlin",
   run_width = 200,
-  run_java = "java",
+  run_java = "/opt/jdk-13/bin/java",
   run_model = "AIC"
 )
 }
@@ -18,7 +18,7 @@ get_regions_parallel(
 
 \item{ref.file}{Fasta file containing Reference genome}
 
-\item{ref.pattern}{}
+\item{ref.pattern}{Unique string to identift reference sequence in alignment labels}
 
 \item{run_width}{how many base pairs should each genome scan be}
 

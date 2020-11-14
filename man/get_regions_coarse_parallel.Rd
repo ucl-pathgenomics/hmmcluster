@@ -5,11 +5,11 @@
 \title{For a given sequence alignment, fasta format, file name. Return the start and stop positions relative to a reference sequence. Quick and Dirty method only.}
 \usage{
 get_regions_coarse_parallel(
-  alignment = "all_raw_best_msa_man3b.fasta",
-  ref.file = "ref/NC_006273.2.fasta",
+  alignment = system.file("extdata/cmv_msa.fasta", package = "hmmcluster"),
+  ref.file = system.file("ref/NC_006273.2.fasta", package = "hmmcluster"),
   ref.pattern = "Merlin",
   run_width = 200,
-  run_java = "java",
+  run_java = "/opt/jdk-13/bin/java",
   run_model = "AIC"
 )
 }
@@ -18,7 +18,7 @@ get_regions_coarse_parallel(
 
 \item{ref.file}{Fasta file containing Reference genome}
 
-\item{ref.pattern}{}
+\item{ref.pattern}{Unique string to identift reference sequence in alignment labels}
 
 \item{run_width}{how many base pairs should each genome scan be}
 

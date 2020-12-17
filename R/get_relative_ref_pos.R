@@ -10,7 +10,7 @@ get_relative_ref_pos = function(alignment, ref.file = system.file("ref/NC_006273
   # takes alignment and reference merlin file
   # returns start, end location relative to merlin
   
-  pattern = "[^ACTG-]"
+  pattern = "[^ACTG]"
   
   ref.seq = ape::read.dna(ref.file,format = "fasta", as.matrix = T)
   ref.seq.string = paste(as.character(ref.seq),collapse = "")

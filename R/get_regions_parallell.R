@@ -9,7 +9,7 @@
 #' @return vector representing start and stop positions relative to reference
 #' @export
 #'
-get_regions_parallel = function(alignment = system.file("extdata/cmv_msa.fasta",package = "hmmcluster"), ref.file = system.file("ref/NC_006273.2.fasta",package = "hmmcluster"), ref.pattern = "Merlin", run_width = 200, run_java = "/opt/jdk-13/bin/java", run_model = "AIC"){
+get_regions_parallel = function(alignment = system.file("extdata/cmv_msa.fasta",package = "hmmcluster"), ref.file = system.file("ref/NC_006273.2.fasta",package = "hmmcluster"), ref.pattern = "Merlin", run_width = 200, run_java = "java", run_model = "AIC"){
   #-----------------
   # setup
   #-----------------
@@ -24,7 +24,7 @@ get_regions_parallel = function(alignment = system.file("extdata/cmv_msa.fasta",
   run$width = run_width
   run$flank = 0
   run$twidth = run$width + 2*run$flank
-  run$java = run_java # "/opt/jdk-13/bin/java"
+  run$java = run_java
   if(run_model == "AIC"){
     run$jar = system.file("AIC.jar",package = "hmmcluster")
   }else if(run_model == "BIC"){
@@ -143,6 +143,7 @@ get_regions_parallel = function(alignment = system.file("extdata/cmv_msa.fasta",
   files = gtools::mixedsort(list.files("out/2-gt", pattern = "*.out"))
   cat(paste("region", "start", "end", "clusters", "ref_start", "ref_end", "LLikelihood", "Parameters", "AIC", "AIC_relative", sep = ","))
   cat(paste("region", "start", "end", "clusters", "ref_start", "ref_end", "LLikelihood", "Parameters", "AIC", "AIC_relative", sep = ","),sep = "\n",file = "out/3-clean/gt-regions.csv",append = F)
+  cat(paste("region", "genotype", "index", "sample", sep = ","),sep = "\n",file = "out/3-clean/gt-assignment.csv",append = F)
   for(i in 1:length(files)){
     infile = files[i]
     infile = paste0("out/2-gt/", infile)
@@ -161,6 +162,26 @@ get_regions_parallel = function(alignment = system.file("extdata/cmv_msa.fasta",
       # ignore it
     }else{
       # is more than one cluster
+      
+      ### write assignment table
+      dat.genotype = data.frame(genotype = 1, V1 = "1", V2 = "1")[-1,]
+      # for each genotype
+      t$geno = 1:(length(t$empty_lines) - 1)
+      for(gt in t$geno){
+        if(gt == max(t$geno)){
+          dat.temp = utils::read.table(text = t$text[(t$empty_lines[gt+1]+2):length(t$text)], sep = "\t")
+        }else{
+          dat.temp = utils::read.table(text = t$text[(t$empty_lines[gt+1]+2):t$empty_lines[gt+2]], sep = "\t")
+        }
+        dat.temp = data.frame(genotype = gt, dat.temp)
+        
+        dat.genotype = rbind(dat.genotype, dat.temp)
+      }
+      dat.genotype = data.frame(region = gtreg$number, dat.genotype)
+      utils::write.table(dat.genotype,file = "out/3-clean/gt-assignment.csv", sep = "," , append = T,col.names = F,row.names = F)
+      
+      
+      
       ### write fasta
       t$seq = msa$seq[, gtreg$start:gtreg$end] # alignment chunk
       t$outfile_fasta = paste("out/3-clean/", gtreg$number,"-", gtreg$start, "-", gtreg$end , ".fasta", sep = "")

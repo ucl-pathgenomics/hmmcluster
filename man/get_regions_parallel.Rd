@@ -9,7 +9,7 @@ get_regions_parallel(
   ref.file = system.file("ref/NC_006273.2.fasta", package = "hmmcluster"),
   ref.pattern = "Merlin",
   run_width = 200,
-  run_java = "/opt/jdk-13/bin/java",
+  run_java = "java",
   run_model = "AIC"
 )
 }

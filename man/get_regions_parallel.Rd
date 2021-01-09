@@ -10,7 +10,8 @@ get_regions_parallel(
   ref.pattern = "Merlin",
   run_width = 200,
   run_java = "java",
-  run_model = "AIC"
+  run_model = "AIC",
+  run_cores = 1
 )
 }
 \arguments{
@@ -25,6 +26,8 @@ get_regions_parallel(
 \item{run_java}{command to run java executable, equired openjdk 13 or equivilent}
 
 \item{run_model}{model selection either 'AIC' or 'BIC. Defaut is AIC}
+
+\item{run_cores}{how many cores for parallell processes to use}
 }
 \value{
 vector representing start and stop positions relative to reference

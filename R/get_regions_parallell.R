@@ -6,10 +6,11 @@
 #' @param run_width how many base pairs should each genome scan be
 #' @param run_java command to run java executable, equired openjdk 13 or equivilent
 #' @param run_model model selection either 'AIC' or 'BIC. Defaut is AIC
+#' @param run_cores how many cores for parallell processes to use
 #' @return vector representing start and stop positions relative to reference
 #' @export
 #'
-get_regions_parallel = function(alignment = system.file("extdata/cmv_msa.fasta",package = "hmmcluster"), ref.file = system.file("ref/NC_006273.2.fasta",package = "hmmcluster"), ref.pattern = "Merlin", run_width = 200, run_java = "java", run_model = "AIC"){
+get_regions_parallel = function(alignment = system.file("extdata/cmv_msa.fasta",package = "hmmcluster"), ref.file = system.file("ref/NC_006273.2.fasta",package = "hmmcluster"), ref.pattern = "Merlin", run_width = 200, run_java = "java", run_model = "AIC", run_cores = 1){
   #-----------------
   # setup
   #-----------------
@@ -88,7 +89,8 @@ get_regions_parallel = function(alignment = system.file("extdata/cmv_msa.fasta",
   }
   
   print(paste("step 2 -" , date() ,"- running hmmcluster on each genome chunk"))
-  system(paste0('find out/1-raw/ -name "*.fasta" | parallel " ', run$java,' -jar ' , run$jar , ' {} > {}.out" '))
+  command = paste0('find out/1-raw/ -name "*.fasta" | parallel --halt now,fail=1 --j ',run_cores, ' "', run$java,' -jar ' , run$jar , ' {} > {}.out" ')
+  system(command)
   
   
   # parallellisation 2
@@ -133,7 +135,8 @@ get_regions_parallel = function(alignment = system.file("extdata/cmv_msa.fasta",
   }
   
   print(paste("step 4 -" , date() ,"- running hmmcluster on each coarse structural region"))
-  system(paste0('find out/2-gt/ -name "*.fasta" | parallel "', run$java,' -jar ' , run$jar , ' {} -trim > {}.out"'))
+  command = paste0('find out/2-gt/ -name "*.fasta" | parallel --halt now,fail=1 --j ',run_cores, ' "', run$java,' -jar ' , run$jar , ' {} -trim > {}.out" ')
+  system(command)
   
   
   # get final regions
@@ -141,7 +144,7 @@ get_regions_parallel = function(alignment = system.file("extdata/cmv_msa.fasta",
   gtreg$prev_end = 1
   gtreg$number = 1
   files = gtools::mixedsort(list.files("out/2-gt", pattern = "*.out"))
-  cat(paste("region", "start", "end", "clusters", "ref_start", "ref_end", "LLikelihood", "Parameters", "AIC", "AIC_relative", sep = ","))
+  cat(paste("region", "start", "end", "clusters", "ref_start", "ref_end", "LLikelihood", "Parameters", "AIC", "AIC_relative", sep = ","),sep = "\n")
   cat(paste("region", "start", "end", "clusters", "ref_start", "ref_end", "LLikelihood", "Parameters", "AIC", "AIC_relative", sep = ","),sep = "\n",file = "out/3-clean/gt-regions.csv",append = F)
   cat(paste("region", "genotype", "index", "sample", sep = ","),sep = "\n",file = "out/3-clean/gt-assignment.csv",append = F)
   for(i in 1:length(files)){

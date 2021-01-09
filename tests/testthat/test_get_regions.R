@@ -1,22 +1,23 @@
 # this is a set of unit tests for the alignment -> regions of genomic structure processes
 
-alignment = system.file("extdata/cmv_msa.fasta", package = "hmmcluster")
-alignment = ape::read.dna(alignment,format = "fasta", as.matrix = T)
+alignment_file = system.file("extdata/cmv_msa.fasta", package = "hmmcluster")
+alignment = ape::read.dna(alignment_file,format = "fasta", as.matrix = T)
 ref.file = system.file("ref/NC_006273.2.fasta",package = "hmmcluster")
 ref.pattern = "Merlin"
 
 
 
 # #------------------------ test get regions
-# running on a very small subset of the msa to test method
-# test_msa = alignment[,6000:7200]
-# ape::write.FASTA(test_msa, "del.fasta")
-# get_regions_parallel(alignment = "del.fasta",ref.file = ref.file,ref.pattern = ref.pattern,run_width = 200,run_java = "/opt/jdk-13/bin/java",run_model = "AIC")
-# 
-# file.remove("del.fasta")
 
+test_that("core functionality", {
+regions = get_regions_parallel(alignment = alignment_file,ref.file = ref.file,ref.pattern = ref.pattern,run_width = 20, run_java = "/opt/jdk-13/bin/java",run_model = "AIC", run_cores = 10)
 
+file.remove("del.fasta")
+expect_equal(regions[1,2],327)
+expect_equal(regions[1,3],379)
+expect_equal(regions[2,2],392)
 
+})
 
 
 
@@ -29,8 +30,8 @@ ref.pattern = "Merlin"
 test_that("helper functions", {
 # relative_reference_position
 rrp = get_relative_ref_pos(alignment, ref.file, ref.pattern)
-expect_equal(rrp[1],42122)
-expect_equal(rrp[2],49391)
+expect_equal(rrp[1],5050)
+expect_equal(rrp[2],7098)
 
 
 # relative_reference_position safe

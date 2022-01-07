@@ -1,2 +1,0 @@
-Chromosome	chromStart	chromEnd	Band	Stain
-CMV_DNA	0	235646	235646	CMV_DNA

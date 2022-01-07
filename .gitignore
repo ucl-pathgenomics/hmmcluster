@@ -5,5 +5,4 @@
 *.Rproj
 
 out/*
-*.fasta
 del.f*

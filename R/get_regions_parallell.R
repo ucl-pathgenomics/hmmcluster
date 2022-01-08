@@ -67,9 +67,9 @@ get_regions_parallel = function(alignment = system.file("testdata/msa_cmv.fasta"
   t$previous = FALSE; gtreg$prev_end = 1
   t$loops = 0 ; gtreg$loops = 1
   
-  #cat(paste(paste(c("clusters", "start_pos", "end_pos", "LL", "paramaters", "AIC", "AIC_relative"),collapse = "\t"), "\n", sep = ""))
+  cat(paste(paste(c("clusters", "start_pos", "end_pos", "LL", "paramaters", "AIC", "AIC_relative"),collapse = "\t"), "\n", sep = ""))
   
-  # parallellisation 1
+  # parallelisation 1
   # process each fasta into .out file for reading in later
   print(paste("step 1 -" , date() ,"- generating a set of genome chunk fasta files"))
   for(i in 1:(length(run$iter) - 1)){
@@ -90,7 +90,7 @@ get_regions_parallel = function(alignment = system.file("testdata/msa_cmv.fasta"
   system(command)
   
   
-  # parallellisation 2
+  # parallelisation 2
   # identify regions to run trimmed
   print(paste("step 3 -" , date() ,"- identifying coarse regions of genomic structure & generating fasta files"))
   print(paste("region", "msa-start", "msa-end"))

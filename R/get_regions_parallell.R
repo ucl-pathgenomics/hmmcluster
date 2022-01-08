@@ -2,21 +2,18 @@
 #'
 #' @param alignment Multiple Sequence Alignment fasta file location
 #' @param ref.file Fasta file containing Reference genome
-#' @param ref.pattern Unique string to identift reference sequence in alignment labels
+#' @param ref.pattern Unique string to identify reference sequence in alignment labels
 #' @param run_width how many base pairs should each genome scan be
-#' @param run_java command to run java executable, equired openjdk 13 or equivilent
-#' @param run_model model selection either 'AIC' or 'BIC. Defaut is AIC
-#' @param run_cores how many cores for parallell processes to use
+#' @param run_java command to run java executable, required openjdk 13 or equivalent
+#' @param run_model model selection either 'AIC' or 'BIC. Default is AIC
+#' @param run_cores how many cores for parallel processes to use
 #' @return vector representing start and stop positions relative to reference
 #' @export
 #'
-get_regions_parallel = function(alignment = system.file("extdata/cmv_msa.fasta",package = "hmmcluster"), ref.file = system.file("ref/NC_006273.2.fasta",package = "hmmcluster"), ref.pattern = "Merlin", run_width = 200, run_java = "java", run_model = "AIC", run_cores = 1){
+get_regions_parallel = function(alignment = system.file("testdata/msa_cmv.fasta",package = "hmmcluster"), ref.file = system.file("testdata/ref_cmv.fasta",package = "hmmcluster"), ref.pattern = "Merlin", run_width = 200, run_java = "java", run_model = "AIC", run_cores = 1){
   #-----------------
   # setup
   #-----------------
-  # library(Biostrings)       # Provides DNAString, DNAStringSet, etc
-  # library(GenomicRanges)    # Provides GRanges, etc
-  # library(GenomicFeatures)  # provides Txdb
   run = list();  msa = list();  t = list();  gtreg = list()
   options(scipen=999) # disable scientific number format
   msa$file = alignment
@@ -70,9 +67,9 @@ get_regions_parallel = function(alignment = system.file("extdata/cmv_msa.fasta",
   t$previous = FALSE; gtreg$prev_end = 1
   t$loops = 0 ; gtreg$loops = 1
   
-  #cat(paste(paste(c("clusters", "start_pos", "end_pos", "LL", "paramaters", "AIC", "AIC_relative"),collapse = "\t"), "\n", sep = ""))
+  cat(paste(paste(c("clusters", "start_pos", "end_pos", "LL", "paramaters", "AIC", "AIC_relative"),collapse = "\t"), "\n", sep = ""))
   
-  # parallellisation 1
+  # parallelisation 1
   # process each fasta into .out file for reading in later
   print(paste("step 1 -" , date() ,"- generating a set of genome chunk fasta files"))
   for(i in 1:(length(run$iter) - 1)){
@@ -93,7 +90,7 @@ get_regions_parallel = function(alignment = system.file("extdata/cmv_msa.fasta",
   system(command)
   
   
-  # parallellisation 2
+  # parallelisation 2
   # identify regions to run trimmed
   print(paste("step 3 -" , date() ,"- identifying coarse regions of genomic structure & generating fasta files"))
   print(paste("region", "msa-start", "msa-end"))

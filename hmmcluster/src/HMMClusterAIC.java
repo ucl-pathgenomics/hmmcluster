@@ -69,7 +69,6 @@ public class HMMClusterAIC {                                        // create cl
         int iStartBest = 0;
         int iEndBest = nSites;
         int iGap = 25;
-        System.out.print("Coarse gap:" + "\t" + iGap + "\n");
         System.out.print("numHMM" + "\t" + "startPos" + "\t" + "endPos" + "\t" + "LL" + "\t" + "params" + "\t" + "AIC" + "\t" + "AICvs1HMM" + "\n");
         //if -trim then
         for (String arg: args) {

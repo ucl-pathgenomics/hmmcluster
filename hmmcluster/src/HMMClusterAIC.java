@@ -1,7 +1,5 @@
 package hmmcluster;
 
-// THIS IS THE EXACT VERSION USED IN THE PAPER EVENTUALLY!!!
-
 /**
  * Hidden Markov Model clustering of Sequence Alignments
  * Represents each sequence in a fasta file as it's own hidden markov model.

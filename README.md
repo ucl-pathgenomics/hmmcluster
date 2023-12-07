@@ -1,40 +1,26 @@
 # hmmcluster
 
-  <!-- badges: start -->
-  [![Travis build status](https://travis-ci.com/ucl-pathgenomics/hmmcluster.svg?branch=master)](https://travis-ci.com/ucl-pathgenomics/hmmcluster)
-  <!-- badges: end -->
- 
-## overview
-A method to identify homologous nucleotide sequence clusters from an alignment in FASTA format.
-Standalone java programs and implementation to find such structural blocks in a MSA.
-
-## method
-Treats each sequence as it's own HMM, then finds the optimal way to cluster sequences using the Log Likelihood and Parameters of such a model of HMM's to determine the optimal such case.
 
 
-## Repository structure
-
- - AIC/BIC.jar - A set of Hidden Markov Model sequencing clustering models. 
-	 - BIC is the most penalising model
-	 - AIC param2 is the middle model.
-	 - AIC param1 is the least penalising model.
- - get_regions.R - Runs the model coarsely scanning along an MSA to find regions of interest.
- - get_regions_refined - Refines the determined regions, to provide the best start & stop positions.
- 
-## Requires
- - Multiple sequence alignment
- - Reference genome in fasta format. R scripts will return a table with alignment and reference co-ordinates.
-
-## Examples
-#### Running the models from a terminal
-java -jar BIC.jar my_alignment.fasta
-#### Running the models from a terminal with trimming. (to determine optimal start / stop positions via Maximum Likelihood)
-java -jar BIC.jar my_alignment.fasta -trim
+## Overview
+This repo contains the code for a nucleotide sequence clustering algorithm based on Hidden Markov Models. This approach effectively addresses the challenge of non-homologous segments within the alignment. 
 
 
-#### Automate finding regions using R
-Rscript get_regions.R my_alingment.fasta my_reference_genome.fasta
+## Getting started
+The easiest way to use this program is via the packaged jar file available for download from the release page to the right here. 
+Then assuming Java is installed you run the program by providing a single argument which is a multi-sequences alignment (MSA) file in fasta format e.g. `java -jar hmmcluster.jar test/msa.fa`
 
-Rscript get_regions_refined.R my_alingment.fasta  my_reference_genome.fasta
 
-< outputs in ./out-clean >
+By default, the program considers the alignment verbatim, but with the `-trim` option the underlying statistical approach can be used to find the optimal start and end base positions of the cluster-able region. e.g. `java -jar hmmcluster.jar test/msa.fa -trim `
+
+
+## Method
+For full details see our paper ![Genomic and geographical structure of human cytomegalovirus](https://www.pnas.org/doi/10.1073/pnas.2221797120)
+
+From a given sequence alignment, hmmcluster determines the optimal number of sequence clusters that best explain the diversity across the genomes. This approach groups together sequences based on the statistical likelihood that they come from the same underlying source. 
+
+## Output
+The program outputs two types of data. The first prints how well n HMM clusters represents the present variability, where n is 1 to the number of sequences in the input. This is represented by a table containing log likeihood, number of parameters and AIC. The last printed line of this output is the optimal number of clusters. The second output below this table is the assignment of sequences to clusters for the optimal model as just described.
+
+# Development and contacts
+Richard Goldstein UCL & ![Oscar Charles UCL](mailto:oscar.charles.18@ucl.ac.uk) & ![Cristina Venturini UCL](mailto:c.venturini@ucl.ac.uk)
